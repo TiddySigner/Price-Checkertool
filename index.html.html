@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quick Price Lookup Tool</title>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#121a33; --muted:#9fb0d0; --text:#eaf0ff;
+      --accent:#7aa7ff; --accent2:#7affc7; --danger:#ff6b7a; --line:#233055;
+      --chip:#1a2550; --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 800px at 10% 10%, #162a66 0%, var(--bg) 55%),
+                  radial-gradient(900px 700px at 90% 30%, #0c3a3b 0%, var(--bg) 55%);
+      color:var(--text);
+      min-height:100vh;
+      padding:18px;
+    }
+    .wrap{max-width:1100px; margin:0 auto; display:grid; gap:14px}
+    header{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; justify-content:space-between;
+    }
+    h1{margin:0; font-size:20px; letter-spacing:.2px}
+    .sub{color:var(--muted); font-size:13px}
+    .grid{display:grid; grid-template-columns: 1.25fr .75fr; gap:14px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px;
+      backdrop-filter: blur(8px);
+    }
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .row > *{flex:1}
+    .row .tight{flex:0 0 auto}
+    label{display:block; font-size:12px; color:var(--muted); margin:0 0 6px}
+    input, textarea, select{
+      width:100%;
+      background:#0c1430;
+      border:1px solid var(--line);
+      color:var(--text);
+      border-radius:12px;
+      padding:11px 12px;
+      outline:none;
+    }
+    textarea{min-height:86px; resize:vertical}
+    input:focus, textarea:focus, select:focus{border-color: rgba(122,167,255,.9); box-shadow: 0 0 0 3px rgba(122,167,255,.15)}
+    button{
+      border:1px solid rgba(122,167,255,.6);
+      background: linear-gradient(180deg, rgba(122,167,255,.25), rgba(122,167,255,.08));
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      transition: transform .06s ease, border-color .2s ease;
+      white-space:nowrap;
+    }
+    button:hover{border-color: rgba(122,167,255,.95)}
+    button:active{transform: translateY(1px)}
+    .btn2{border-color: rgba(122,255,199,.55); background: linear-gradient(180deg, rgba(122,255,199,.18), rgba(122,255,199,.06))}
+    .btnDanger{border-color: rgba(255,107,122,.55); background: linear-gradient(180deg, rgba(255,107,122,.18), rgba(255,107,122,.06))}
+    .chips{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+    .chip{
+      background: rgba(26,37,80,.7);
+      border:1px solid var(--line);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      color: var(--muted);
+      display:flex; gap:8px; align-items:center;
+    }
+    .chip strong{color:var(--text); font-weight:600}
+    .links{display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; margin-top:12px}
+    @media (max-width: 520px){ .links{grid-template-columns:1fr} }
+    a.link{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+      text-decoration:none;
+      border:1px solid var(--line);
+      background: rgba(12,20,48,.75);
+      padding:11px 12px;
+      border-radius:14px;
+      color:var(--text);
+    }
+    a.link span{color:var(--muted); font-size:12px}
+    .mini{font-size:12px; color:var(--muted)}
+    .hr{height:1px; background:var(--line); margin:12px 0}
+    table{width:100%; border-collapse:collapse}
+    th, td{border-bottom:1px solid var(--line); padding:10px 6px; font-size:13px}
+    th{color:var(--muted); font-weight:600; text-align:left}
+    .right{text-align:right}
+    .tag{
+      display:inline-block; font-size:11px; padding:4px 8px; border-radius:999px;
+      border:1px solid var(--line); background: rgba(26,37,80,.55); color:var(--muted);
+      margin-left:6px;
+    }
+    .hidden{display:none}
+    .camera{
+      border:1px dashed rgba(159,176,208,.5);
+      border-radius:14px;
+      padding:10px;
+      background: rgba(12,20,48,.35);
+    }
+    video{width:100%; border-radius:12px}
+    .note{color:var(--muted); font-size:12px; line-height:1.35}
+    .footer{color:var(--muted); font-size:12px; text-align:center; margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Quick Price Lookup</h1>
+        <div class="sub">Search sold comps fast (type, paste, or scan barcode). No login. Runs as a single HTML file.</div>
+      </div>
+      <div class="row tight" style="gap:8px">
+        <button id="btnShare" class="btn2">Copy Share Link</button>
+        <button id="btnReset" class="btnDanger">Reset</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="row">
+          <div>
+            <label>Item / keywords</label>
+            <input id="q" placeholder="e.g., 'Nike Air Max 90', 'Pyrex bowl', 'PS5 controller'..." />
+          </div>
+          <div class="tight" style="min-width:180px">
+            <label>Condition</label>
+            <select id="cond">
+              <option value="">Any</option>
+              <option value="new">New</option>
+              <option value="used">Used</option>
+              <option value="parts">For parts</option>
+            </select>
+          </div>
+          <div class="tight" style="min-width:140px">
+            <label>Qty</label>
+            <input id="qty" type="number" min="1" value="1" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <div>
+            <label>Barcode (optional)</label>
+            <input id="barcode" placeholder="Scan/paste UPC/EAN/ISBN" />
+          </div>
+          <div class="tight">
+            <label>&nbsp;</label>
+            <button id="btnOpenAll">Open Searches</button>
+          </div>
+          <div class="tight">
+            <label>&nbsp;</label>
+            <button id="btnAdd" class="btn2">Add to List</button>
+          </div>
+        </div>
+
+        <div class="chips" id="chips"></div>
+
+        <div class="links" id="links"></div>
+
+        <div class="hr"></div>
+
+        <div class="row">
+          <div>
+            <label>Sold prices (paste numbers; one per line)</label>
+            <textarea id="prices" placeholder="Example:
+19.99
+24.50
+17
+22.00"></textarea>
+          </div>
+          <div class="tight" style="min-width:260px">
+            <label>Quick stats</label>
+            <div class="camera">
+              <div class="mini" id="stats">Median: — | Avg: — | Low/High: —</div>
+              <div class="mini" style="margin-top:8px">
+                Suggested offer (median × qty): <strong id="suggested">—</strong>
+              </div>
+              <div class="row" style="margin-top:10px">
+                <button id="btnCalc">Calculate</button>
+                <button id="btnClearPrices" class="btnDanger">Clear</button>
+              </div>
+              <div class="note" style="margin-top:10px">
+                Tip: use <b>eBay Sold</b> links above, pick a few recent sold prices, paste here for a quick median.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="card">
+        <div class="row" style="align-items:flex-end">
+          <div>
+            <label>Barcode scanner (phone camera)</label>
+            <div class="note">Tap “Start Scanner” on mobile. If camera access is blocked, use manual barcode input.</div>
+          </div>
+          <div class="tight">
+            <button id="btnScan" class="btn2">Start Scanner</button>
+          </div>
+        </div>
+
+        <div id="scanWrap" class="camera hidden" style="margin-top:10px">
+          <video id="video" playsinline></video>
+          <div class="row" style="margin-top:10px">
+            <button id="btnStop" class="btnDanger">Stop</button>
+            <div class="mini" id="scanStatus" style="flex:2">Waiting…</div>
+          </div>
+          <div class="note" style="margin-top:8px">
+            Works best on HTTPS hosting (GitHub Pages / Netlify). Some browsers won’t allow camera on file:// pages.
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="row" style="justify-content:space-between; align-items:center">
+          <div>
+            <div style="font-weight:650">Session List <span class="tag" id="countTag">0</span></div>
+            <div class="note">Quick notes while you’re shopping. Stored locally in your browser.</div>
+          </div>
+          <div class="tight">
+            <button id="btnExport">Export CSV</button>
+          </div>
+        </div>
+
+        <div style="overflow:auto; margin-top:10px; max-height:420px">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th class="right">Qty</th>
+                <th class="right">When</th>
+                <th class="right"></th>
+              </tr>
+            </thead>
+            <tbody id="list"></tbody>
+          </table>
+        </div>
+
+        <div class="footer">Single-file tool • no accounts • works offline (except links + camera scanning)</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ---------- helpers ----------
+  const $ = (id) => document.getElementById(id);
+  const enc = encodeURIComponent;
+
+  function nowStamp(){
+    const d = new Date();
+    return d.toLocaleString();
+  }
+
+  function parsePrices(text){
+    return text
+      .split(/[\n,]+/g)
+      .map(s => s.trim().replace(/[^\d.]/g, ""))
+      .filter(Boolean)
+      .map(Number)
+      .filter(n => Number.isFinite(n) && n >= 0);
+  }
+
+  function median(arr){
+    if(!arr.length) return null;
+    const a = [...arr].sort((x,y)=>x-y);
+    const mid = Math.floor(a.length/2);
+    return a.length % 2 ? a[mid] : (a[mid-1] + a[mid]) / 2;
+  }
+
+  function avg(arr){
+    if(!arr.length) return null;
+    return arr.reduce((s,n)=>s+n,0) / arr.length;
+  }
+
+  function fmtMoney(n){
+    if(n == null) return "—";
+    return new Intl.NumberFormat(undefined, { style:"currency", currency:"USD" }).format(n);
+  }
+
+  // ---------- state ----------
+  const STORAGE_KEY = "quick_price_lookup_session_v1";
+  let session = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+  function saveSession(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    renderList();
+  }
+
+  function buildQuery(){
+    const q = $("q").value.trim();
+    const bc = $("barcode").value.trim();
+    const cond = $("cond").value;
+    const qty = Math.max(1, Number($("qty").value || 1));
+
+    // Prefer barcode if provided, but allow both
+    const base = [q, bc].filter(Boolean).join(" ").trim();
+
+    return { q, bc, cond, qty, base };
+  }
+
+  function updateChips(){
+    const { q, bc, cond, qty, base } = buildQuery();
+    const chips = [];
+    if(base) chips.push({label:"Search", value:base});
+    if(cond) chips.push({label:"Cond", value:cond});
+    chips.push({label:"Qty", value:String(qty)});
+    $("chips").innerHTML = chips.map(c =>
+      `<div class="chip"><span>${c.label}:</span> <strong>${escapeHtml(c.value)}</strong></div>`
+    ).join("");
+  }
+
+  function escapeHtml(s){
+    return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+  }
+
+  function buildLinks(){
+    const { base, bc, q } = buildQuery();
+    const query = base || q || bc || "";
+    const lens = query; // lens can still use the text query
+
+    // eBay condition codes (rough mapping)
+    const cond = $("cond").value;
+    let ebayCond = "";
+    if(cond === "new") ebayCond = "&LH_ItemCondition=1000";
+    if(cond === "used") ebayCond = "&LH_ItemCondition=3000";
+    if(cond === "parts") ebayCond = "&LH_ItemCondition=7000";
+
+    const links = [
+      { name: "eBay Sold (Comps)", note:"Best for real prices", url:
+        `https://www.ebay.com/sch/i.html?_nkw=${enc(query)}&LH_Sold=1&LH_Complete=1${ebayCond}` },
+      { name: "eBay Active", note:"Competition", url:
+        `https://www.ebay.com/sch/i.html?_nkw=${enc(query)}${ebayCond}` },
+      { name: "Google Lens", note:"Image / brand match", url:
+        `https://lens.google.com/uploadbyurl?url=${enc("https://example.com")}` }, // fallback; button below opens lens search page too
+      { name: "Google Shopping", note:"Retail refs", url:
+        `https://www.google.com/search?tbm=shop&q=${enc(query)}` },
+      { name: "Amazon Search", note:"New comps", url:
+        `https://www.amazon.com/s?k=${enc(query)}` },
+      { name: "Walmart Search", note:"Retail refs", url:
+        `https://www.walmart.com/search?q=${enc(query)}` },
+      { name: "Mercari", note:"Alt marketplace", url:
+        `https://www.mercari.com/search/?keyword=${enc(query)}` },
+      { name: "Facebook Marketplace", note:"Local comps", url:
+        `https://www.facebook.com/marketplace/search/?query=${enc(query)}` },
+    ];
+
+    // Lens link workaround: some phones prefer opening the lens homepage with query in Google search
+    // We'll make the card open a standard image search query as well.
+    links[2].url = `https://www.google.com/search?tbm=isch&q=${enc(lens)}`;
+
+    $("links").innerHTML = links.map(l =>
+      `<a class="link" href="${l.url}" target="_blank" rel="noopener">
+        <div><div style="font-weight:650">${escapeHtml(l.name)}</div><span>${escapeHtml(l.note)}</span></div>
+        <div style="opacity:.9">↗</div>
+      </a>`
+    ).join("");
+  }
+
+  function openAll(){
+    const anchors = [...$("links").querySelectorAll("a.link")];
+    // Popup blockers may limit this; still helpful
+    anchors.forEach((a, i) => setTimeout(() => window.open(a.href, "_blank", "noopener"), i * 80));
+  }
+
+  // ---------- stats ----------
+  function calcStats(){
+    const vals = parsePrices($("prices").value);
+    const m = median(vals);
+    const a = avg(vals);
+    const lo = vals.length ? Math.min(...vals) : null;
+    const hi = vals.length ? Math.max(...vals) : null;
+
+    $("stats").textContent =
+      `Median: ${fmtMoney(m)} | Avg: ${fmtMoney(a)} | Low/High: ${fmtMoney(lo)} / ${fmtMoney(hi)}`;
+
+    const qty = Math.max(1, Number($("qty").value || 1));
+    $("suggested").textContent = fmtMoney(m == null ? null : m * qty);
+  }
+
+  // ---------- list ----------
+  function renderList(){
+    $("countTag").textContent = session.length;
+    $("list").innerHTML = session.map((it, idx) => `
+      <tr>
+        <td>
+          <div style="font-weight:650">${escapeHtml(it.text)}</div>
+          ${it.barcode ? `<div class="mini">Barcode: ${escapeHtml(it.barcode)}</div>` : ``}
+        </td>
+        <td class="right">${it.qty}</td>
+        <td class="right"><span class="mini">${escapeHtml(it.when)}</span></td>
+        <td class="right">
+          <button class="btnDanger" data-del="${idx}" style="padding:8px 10px">Delete</button>
+        </td>
+      </tr>
+    `).join("");
+
+    // bind delete
+    $("list").querySelectorAll("[data-del]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = Number(btn.getAttribute("data-del"));
+        session.splice(i, 1);
+        saveSession();
+      });
+    });
+  }
+
+  function addItem(){
+    const { base, q, bc, qty } = buildQuery();
+    const text = base || q || bc;
+    if(!text) return alert("Type an item name or scan/paste a barcode first.");
+    session.unshift({ text, barcode: bc || "", qty, when: nowStamp() });
+    saveSession();
+  }
+
+  function exportCSV(){
+    if(!session.length) return alert("Nothing to export yet.");
+    const rows = [["Item","Barcode","Qty","When"], ...session.map(s => [s.text, s.barcode, s.qty, s.when])];
+    const csv = rows.map(r => r.map(cell => `"${String(cell).replaceAll('"','""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], {type:"text/csv"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "price-tool-session.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // ---------- share link ----------
+  function copyShareLink(){
+    const { base, cond, qty } = buildQuery();
+    const params = new URLSearchParams();
+    if(base) params.set("q", base);
+    if(cond) params.set("c", cond);
+    if(qty) params.set("n", String(qty));
+    const share = `${location.origin}${location.pathname}?${params.toString()}`;
+    navigator.clipboard.writeText(share).then(() => {
+      $("btnShare").textContent = "Copied!";
+      setTimeout(()=> $("btnShare").textContent="Copy Share Link", 1000);
+    }).catch(() => alert("Clipboard blocked. Copy manually:\n" + share));
+  }
+
+  function loadFromURL(){
+    const p = new URLSearchParams(location.search);
+    const q = p.get("q"); const c = p.get("c"); const n = p.get("n");
+    if(q) $("q").value = q;
+    if(c) $("cond").value = c;
+    if(n) $("qty").value = n;
+  }
+
+  // ---------- camera barcode scan (very lightweight) ----------
+  // This does NOT use a library; it uses BarcodeDetector if available.
+  // iOS Safari support can vary; Chrome/Android is best.
+  let stream = null;
+  let scanTimer = null;
+
+  async function startScanner(){
+    const wrap = $("scanWrap");
+    wrap.classList.remove("hidden");
+    $("scanStatus").textContent = "Requesting camera…";
+
+    if(!("BarcodeDetector" in window)){
+      $("scanStatus").textContent = "BarcodeDetector not supported in this browser. Use manual barcode input.";
+      return;
+    }
+
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio:false });
+      const video = $("video");
+      video.srcObject = stream;
+      await video.play();
+
+      const detector = new BarcodeDetector({ formats: ["ean_13","ean_8","upc_a","upc_e","code_128","code_39","qr_code"] });
+      $("scanStatus").textContent = "Scanning… hold steady";
+
+      scanTimer = setInterval(async () => {
+        try{
+          const barcodes = await detector.detect(video);
+          if(barcodes && barcodes.length){
+            const raw = barcodes[0].rawValue || "";
+            $("barcode").value = raw;
+            $("scanStatus").textContent = `Detected: ${raw}`;
+            updateChips(); buildLinks();
+            // Optional: auto-open comps
+            // openAll();
+          }
+        }catch(e){
+          // ignore frame errors
+        }
+      }, 350);
+    }catch(err){
+      $("scanStatus").textContent = "Camera blocked/unavailable. Try HTTPS hosting or allow permissions.";
+    }
+  }
+
+  function stopScanner(){
+    if(scanTimer){ clearInterval(scanTimer); scanTimer = null; }
+    if(stream){
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+    $("scanStatus").textContent = "Stopped.";
+  }
+
+  // ---------- reset ----------
+  function resetAll(){
+    if(!confirm("Reset inputs and clear saved session list?")) return;
+    $("q").value = "";
+    $("barcode").value = "";
+    $("cond").value = "";
+    $("qty").value = 1;
+    $("prices").value = "";
+    session = [];
+    localStorage.removeItem(STORAGE_KEY);
+    calcStats();
+    updateChips();
+    buildLinks();
+    renderList();
+  }
+
+  // ---------- events ----------
+  ["q","barcode","cond","qty"].forEach(id => {
+    $(id).addEventListener("input", () => { updateChips(); buildLinks(); calcStats(); });
+  });
+
+  $("btnOpenAll").addEventListener("click", openAll);
+  $("btnAdd").addEventListener("click", addItem);
+  $("btnCalc").addEventListener("click", calcStats);
+  $("btnClearPrices").addEventListener("click", () => { $("prices").value=""; calcStats(); });
+  $("btnExport").addEventListener("click", exportCSV);
+  $("btnShare").addEventListener("click", copyShareLink);
+  $("btnReset").addEventListener("click", resetAll);
+
+  $("btnScan").addEventListener("click", startScanner);
+  $("btnStop").addEventListener("click", stopScanner);
+
+  // init
+  loadFromURL();
+  updateChips();
+  buildLinks();
+  renderList();
+  calcStats();
+})();
+</script>
+</body>
+</html>
